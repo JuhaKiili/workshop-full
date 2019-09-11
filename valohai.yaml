@@ -2,10 +2,11 @@
 
 - step:
     name: Train
-    image: juhavalohai/workshop:0.1
+    image: juhavalohai/workshop:gpu6
     command:
-    - unzip -j /valohai/inputs/training-data/train.zip -d /valohai/repository/training-data
+    - unzip -q -j /valohai/inputs/training_data/train.zip -d /valohai/repository/training_data
     - python train.py {parameters}
+    - zip /valohai/outputs/model.zip /valohai/repository/models
     parameters:
       - name: epochs
         pass-as: -epochs={v}
@@ -28,7 +29,7 @@
         type: integer
         default: 100
       - name: validation_count
-        pass-as: -steps={v}
+        pass-as: -validation_count={v}
         description: How many images for validation
         type: integer
         default: 250
@@ -37,6 +38,11 @@
         description: Filters per layer
         type: integer
         default: 32
+      - name: image_size
+        pass-as: -image_size={v}
+        description: Image size
+        type: integer
+        default: 50
       - name: brain_size
         pass-as: -brain_size={v}
         description: Size of fully connected layer
@@ -53,14 +59,11 @@
 
 - step:
     name: Inference
-    image: juhavalohai/workshop:0.1
-    command: python inference.py {parameters}
+    image: juhavalohai/workshop:gpu6
+    command:
+      - unzip -j /valohai/inputs/model/model.zip -d /valohai/repository/models
+      - python inference.py {parameters}
     parameters:
-      - name: epochs
-        pass-as: -epochs={v}
-        description: Number of epochs
-        type: integer
-        default: 50
       - name: filter_count
         pass-as: -filter_count={v}
         description: Filters per layer
@@ -71,3 +74,14 @@
         description: Size of fully connected layer
         type: integer
         default: 1024
+      - name: name
+        pass-as: -name={v}
+        description: Model name
+        type: string
+        default: dogsvscats
+    inputs:
+      - name: inference_image
+        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/muru.jpg
+        optional: true
+      - name: model
+        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/model.zip

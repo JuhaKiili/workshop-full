@@ -38,7 +38,7 @@ args = parser.parse_args()
 
 TRAIN_DIR = os.getenv('VH_REPOSITORY_DIR', '/work') + "/training_data"
 LEARNING_RATE = args.learning_rate
-MODEL_NAME = os.getenv('VH_OUTPUTS_DIR', '/work/models') + "/%s.model" % args.name
+MODEL_NAME = os.getenv('VH_REPOSITORY_DIR', '/work') + "/models/%s.model" % args.name
 IMAGE_SIZE = args.image_size
 EPOCHS = args.epochs
 STEPS = args.steps
@@ -71,7 +71,6 @@ print("Loading images...")
 
 train_data_loader()
 train_data_g = np.load('training_data.npy', allow_pickle=True)
-
 model = get_model(LEARNING_RATE, IMAGE_SIZE, DROPOUT, BRAIN_SIZE, FILTER_COUNT)
 
 train = train_data_g[:-VALIDATION_COUNT]

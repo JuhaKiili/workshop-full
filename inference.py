@@ -20,8 +20,8 @@ parser.add_argument('-filter_count', type=int, default=32, help="Filter count")
 parser.add_argument('-brain_size', type=int, default=1024, help="Brain size")
 args = parser.parse_args()
 
-INFERENCE_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/inference_data"
-MODEL_NAME = os.getenv('VH_INPUTS_DIR', '/work/models') + "/%s.model" % args.name
+INFERENCE_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/inference_image"
+MODEL_NAME = os.getenv('VH_REPOSITORY_DIR', '/work') + "/models/%s.model" % args.name
 
 FILTER_COUNT = args.filter_count
 BRAIN_SIZE = args.brain_size
