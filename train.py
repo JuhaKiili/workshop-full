@@ -1,4 +1,5 @@
 import os
+import json
 import tensorflow as tf
 import numpy as np
 from random import shuffle
@@ -24,7 +25,7 @@ parser.add_argument('-validation_count', type=int, default=500, help="Validation
 parser.add_argument('-name', type=str, default="dogsvscats", help="Model name")
 args = parser.parse_args()
 
-TRAIN_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/training_data"
+TRAIN_DIR = os.getenv('VH_REPOSITORY_DIR', '/work') + "/training_data"
 LEARNING_RATE = args.learning_rate
 MODEL_NAME = os.getenv('VH_OUTPUTS_DIR', '/work/models') + "/%s.model" % args.name
 IMAGE_SIZE = args.image_size
@@ -68,8 +69,11 @@ X = np.array([i[0] for i in train]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,1)
 Y = [i[1] for i in train]
 test_x = np.array([i[0] for i in test]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,1)
 test_y = [i[1] for i in test]
-model.fit(X, Y, n_epoch=EPOCHS, validation_set=(test_x,  test_y),
+
+model.fit(X, Y, n_epoch=EPOCHS, validation_set=(test_x, test_y),
     snapshot_step=STEPS, show_metric=True, run_id=MODEL_NAME)
+
+# score = model.evaluate(test_x, test_y)
 
 print("Saving model %s" % MODEL_NAME)
 model.save(MODEL_NAME)

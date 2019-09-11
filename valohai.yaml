@@ -1,0 +1,73 @@
+---
+
+- step:
+    name: Train
+    image: juhavalohai/workshop:0.1
+    command:
+    - unzip -j /valohai/inputs/training-data/train.zip -d /valohai/repository/training-data
+    - python train.py {parameters}
+    parameters:
+      - name: epochs
+        pass-as: -epochs={v}
+        description: Number of epochs
+        type: integer
+        default: 50
+      - name: learning_rate
+        pass-as: -learning_rate={v}
+        description: Initial learning rate
+        type: float
+        default: 0.001
+      - name: dropout
+        pass-as: -dropout={v}
+        description: Keep probability for training dropout
+        type: float
+        default: 0.8
+      - name: steps
+        pass-as: -steps={v}
+        description: How many images per step
+        type: integer
+        default: 100
+      - name: validation_count
+        pass-as: -steps={v}
+        description: How many images for validation
+        type: integer
+        default: 250
+      - name: filter_count
+        pass-as: -filter_count={v}
+        description: Filters per layer
+        type: integer
+        default: 32
+      - name: brain_size
+        pass-as: -brain_size={v}
+        description: Size of fully connected layer
+        type: integer
+        default: 1024
+      - name: images_count
+        pass-as: -images_count={v}
+        description: Limit on images to use
+        type: integer
+        default: 25000
+    inputs:
+      - name: training_data
+        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/train.zip
+
+- step:
+    name: Inference
+    image: juhavalohai/workshop:0.1
+    command: python inference.py {parameters}
+    parameters:
+      - name: epochs
+        pass-as: -epochs={v}
+        description: Number of epochs
+        type: integer
+        default: 50
+      - name: filter_count
+        pass-as: -filter_count={v}
+        description: Filters per layer
+        type: integer
+        default: 32
+      - name: brain_size
+        pass-as: -brain_size={v}
+        description: Size of fully connected layer
+        type: integer
+        default: 1024

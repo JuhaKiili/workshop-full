@@ -7,3 +7,5 @@ RUN pip install tflearn
 RUN pip install argparse
 RUN pip install h5py
 RUN pip install valohai-cli
+RUN apt-get update
+RUN apt-get install unzip
