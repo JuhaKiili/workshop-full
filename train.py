@@ -12,6 +12,17 @@ from tflearn.layers.estimator import regression
 from model import get_model
 import argparse
 
+class MonitorCallback(tflearn.callbacks.Callback):
+    def on_epoch_end(self, training_state, snapshot=False):
+        print(json.dumps({
+            'epoch':training_state.epoch,
+            'acc_value':training_state.acc_value,
+            'loss_value':training_state.loss_value,
+            'val_acc':training_state.val_acc,
+            'val_loss':training_state.val_loss
+            }))
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-learning_rate', type=float, default=0.001, help="Learning rate")
 parser.add_argument('-image_size', type=int, default=50, help="Image size")
@@ -70,10 +81,10 @@ Y = [i[1] for i in train]
 test_x = np.array([i[0] for i in test]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,1)
 test_y = [i[1] for i in test]
 
-model.fit(X, Y, n_epoch=EPOCHS, validation_set=(test_x, test_y),
-    snapshot_step=STEPS, show_metric=True, run_id=MODEL_NAME)
+monitorCallback = MonitorCallback()
 
-# score = model.evaluate(test_x, test_y)
+model.fit(X, Y, n_epoch=EPOCHS, validation_set=(test_x, test_y),
+    snapshot_step=STEPS, show_metric=True, run_id=MODEL_NAME, callbacks=monitorCallback)
 
 print("Saving model %s" % MODEL_NAME)
 model.save(MODEL_NAME)
