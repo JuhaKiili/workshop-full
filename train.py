@@ -20,14 +20,13 @@ parser.add_argument('-brain_size', type=int, default=1024, help="Brain size")
 parser.add_argument('-epochs', type=int, default=1, help="Epochs")
 parser.add_argument('-steps', type=int, default=500, help="Steps")
 parser.add_argument('-images_count', type=int, default=100000, help="Image count limit")
+parser.add_argument('-validation_count', type=int, default=500, help="Validation count")
 parser.add_argument('-name', type=str, default="dogsvscats", help="Model name")
 args = parser.parse_args()
 
-INFERENCE_DIR = '/work/inference'
-TRAIN_DIR = '/work/train'
-
+TRAIN_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/training_data"
 LEARNING_RATE = args.learning_rate
-MODEL_NAME = "/work/models/%s.model" % args.name
+MODEL_NAME = os.getenv('VH_OUTPUTS_DIR', '/work/models') + "/%s.model" % args.name
 IMAGE_SIZE = args.image_size
 EPOCHS = args.epochs
 STEPS = args.steps
@@ -35,6 +34,7 @@ DROPOUT = args.dropout
 FILTER_COUNT = args.filter_count
 BRAIN_SIZE = args.brain_size
 IMAGES_COUNT = args.images_count
+VALIDATION_COUNT = args.validation_count
 
 def label_image(img):
     img_name = img.split(".")[-3]
@@ -62,12 +62,8 @@ train_data_g = np.load('training_data.npy', allow_pickle=True)
 
 model = get_model(LEARNING_RATE, IMAGE_SIZE, DROPOUT, BRAIN_SIZE, FILTER_COUNT)
 
-# if os.path.exists("{}.meta".format(MODEL_NAME)):
-#     model.load(MODEL_NAME)
-#     print("\nExisting model %s loaded\n" % MODEL_NAME)
-
-train = train_data_g[:-int(IMAGES_COUNT/10)]
-test = train_data_g[-int(IMAGES_COUNT/10):]
+train = train_data_g[:-VALIDATION_COUNT]
+test = train_data_g[-VALIDATION_COUNT:]
 X = np.array([i[0] for i in train]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,1)
 Y = [i[1] for i in train]
 test_x = np.array([i[0] for i in test]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,1)

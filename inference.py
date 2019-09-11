@@ -1,4 +1,5 @@
 import os
+import sys
 import tensorflow as tf
 import numpy as np
 from random import shuffle
@@ -15,12 +16,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-image_size', type=int, default=50, help="Image size")
 parser.add_argument('-images_count', type=int, default=100000, help="Image count limit")
 parser.add_argument('-name', type=str, default="dogsvscats", help="Model name")
+parser.add_argument('-filter_count', type=int, default=32, help="Filter count")
+parser.add_argument('-brain_size', type=int, default=1024, help="Brain size")
 args = parser.parse_args()
 
-INFERENCE_DIR = '/work/inference'
-TRAIN_DIR = '/work/train'
+INFERENCE_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/inference_data"
+MODEL_NAME = os.getenv('VH_INPUTS_DIR', '/work/models') + "/%s.model" % args.name
 
-MODEL_NAME = "/work/models/%s.model" % args.name
+FILTER_COUNT = args.filter_count
+BRAIN_SIZE = args.brain_size
 IMAGE_SIZE = args.image_size
 IMAGES_COUNT = args.images_count
 
@@ -42,22 +46,18 @@ testing_data_loader()
 tf.reset_default_graph()
 
 convnet = input_data(shape=[None, IMAGE_SIZE, IMAGE_SIZE, 1], name='input')
+model = get_model(brain_size=BRAIN_SIZE, filters=FILTER_COUNT)
 
 if os.path.exists("{}.meta".format(MODEL_NAME)):
     model.load(MODEL_NAME)
-    print("Model Loaded")
+    print("Model Loaded from %s" % ("{}.meta".format(MODEL_NAME)))
 else:
-    print("Error loading model from %s" % ("{}.meta".format(MODEL_NAME)))
-    return
+    sys.exit("Error loading model from %s" % ("{}.meta".format(MODEL_NAME)))
 
 test_data = np.load("test_data.npy", allow_pickle=True)
-with open("final_results.csv",mode="w") as f:
-    f.write("id,pred \n")
-with open("final_results.csv",mode="a") as r:
-    for data in test_data:
-        img_class = data[1]
-        img = data[0]
-        imgs = img.reshape((IMAGE_SIZE,IMAGE_SIZE,1))
-        model_out = model.predict([imgs])[0]
-        r.write("{},{} \n".format(img_class,model_out[1]))
-        print("Image %s doggy score: %d" % (img_class, model_out[1]))
+for data in test_data:
+    img_class = data[1]
+    img = data[0]
+    imgs = img.reshape((IMAGE_SIZE,IMAGE_SIZE,1))
+    model_out = model.predict([imgs])[0]
+    print("Image %s doggy probability: %.4g%%" % (img_class, model_out[1]*100.0))

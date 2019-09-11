@@ -4,7 +4,12 @@ from tflearn.layers.core import input_data,dropout,fully_connected
 from tflearn.layers.estimator import regression
 import tflearn
 
-def get_model(learning_rate, image_size, drop_out, brain_size, filters):
+def get_model(
+    learning_rate=0.001,
+    image_size=50,
+    drop_out=0.8,
+    brain_size=1024,
+    filters=32):
     tf.reset_default_graph()
 
     convnet = input_data(shape=[None, image_size, image_size, 1], name='input')
