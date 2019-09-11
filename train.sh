@@ -1,5 +1,5 @@
 python -W ignore /work/train.py \
-    -epochs=5 \
+    -epochs=10 \
     -steps=100 \
     -learning_rate=0.001 \
     -dropout=0.8 \

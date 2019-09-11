@@ -6,7 +6,7 @@
     command:
     - unzip -q -j /valohai/inputs/training_data/train.zip -d /valohai/repository/training_data
     - python train.py {parameters}
-    - zip /valohai/outputs/model.zip /valohai/repository/models
+    - zip -j /valohai/outputs/model.zip /valohai/repository/models/*
     parameters:
       - name: epochs
         pass-as: -epochs={v}
@@ -25,9 +25,9 @@
         default: 0.8
       - name: steps
         pass-as: -steps={v}
-        description: How many images per step
+        description: How many steps per checkpoint
         type: integer
-        default: 100
+        default: 1000
       - name: validation_count
         pass-as: -validation_count={v}
         description: How many images for validation
@@ -79,6 +79,11 @@
         description: Model name
         type: string
         default: dogsvscats
+      - name: image_size
+        pass-as: -image_size={v}
+        description: Image size
+        type: integer
+        default: 50
     inputs:
       - name: inference_image
         default: https://workshop-juha.s3-eu-west-1.amazonaws.com/muru.jpg

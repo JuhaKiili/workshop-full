@@ -61,7 +61,9 @@ def train_data_loader():
         img_lable = label_image(img)
         path_to_img = os.path.join(TRAIN_DIR,img)
         img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_GRAYSCALE),(IMAGE_SIZE,IMAGE_SIZE))
+        himg = cv2.flip( img, 0 )
         training_data.append([np.array(img),np.array(img_lable)])
+        training_data.append([np.array(himg),np.array(img_lable)])
 
     shuffle(training_data)
     np.save("training_data.npy",training_data)

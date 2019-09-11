@@ -46,7 +46,7 @@ testing_data_loader()
 tf.reset_default_graph()
 
 convnet = input_data(shape=[None, IMAGE_SIZE, IMAGE_SIZE, 1], name='input')
-model = get_model(brain_size=BRAIN_SIZE, filters=FILTER_COUNT)
+model = get_model(brain_size=BRAIN_SIZE, filters=FILTER_COUNT, image_size=IMAGE_SIZE)
 
 if os.path.exists("{}.meta".format(MODEL_NAME)):
     model.load(MODEL_NAME)
