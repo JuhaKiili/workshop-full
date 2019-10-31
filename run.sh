@@ -1,1 +1,1 @@
-docker run -t -v "$PWD":/work juhavalohai/workshop sh /work/$1.sh
+docker run -t -v "$PWD":/home/jovyan/work -p 8888:8888 juhavalohai/workshop
