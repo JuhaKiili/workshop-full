@@ -1,0 +1,1 @@
+tensorboard --logdir /work/logs --bind_all

@@ -1,1 +1,1 @@
-docker build ./docker -t juhavalohai/workshop
+docker build . -t juhavalohai/workshop

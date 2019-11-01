@@ -1,36 +1,34 @@
 import tensorflow as tf
-from tflearn.layers.conv import conv_2d,max_pool_2d
-from tflearn.layers.core import input_data,dropout,fully_connected
-from tflearn.layers.estimator import regression
-import tflearn
+from tensorflow.keras import datasets, layers, models
 
 def get_model(
     learning_rate=0.001,
+    batch_size=32,
     image_size=50,
     drop_out=0.8,
-    brain_size=1024,
-    filters=32):
-    tf.reset_default_graph()
+    dense_size=1024,
+    filter_count=32):
 
-    convnet = input_data(shape=[None, image_size, image_size, 1], name='input')
+    model = models.Sequential()
+    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu', input_shape=(image_size, image_size, 3)))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
 
-    convnet = conv_2d(convnet, filters, 5, activation='relu')
-    convnet = max_pool_2d(convnet, 5)
-    convnet = conv_2d(convnet, filters * 2, 5, activation='relu')
-    convnet = max_pool_2d(convnet, 5)
-    convnet = conv_2d(convnet, filters * 4, 5, activation='relu')
-    convnet = max_pool_2d(convnet, 5)
-    convnet = conv_2d(convnet, filters * 2, 5, activation='relu')
-    convnet = max_pool_2d(convnet, 5)
-    convnet = conv_2d(convnet, filters, 5, activation='relu')
-    convnet = max_pool_2d(convnet, 5)
-    convnet = fully_connected(convnet, brain_size, activation='relu')
-    convnet = dropout(convnet, drop_out)
-    convnet = fully_connected(convnet, 2, activation='softmax')
-    convnet = regression(
-        convnet,
+    model.add(layers.Flatten())
+    model.add(layers.Dense(dense_size, activation='relu'))
+    model.add(layers.Dense(2, activation='softmax'))
+    model.compile(
         optimizer='adam',
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'],
+        batch_size=batch_size,
         learning_rate=learning_rate,
-        loss='categorical_crossentropy',
-        name='targets')
-    return tflearn.DNN(convnet, tensorboard_dir='/work/log')
+        drop_out=drop_out,
+        )
+    return model

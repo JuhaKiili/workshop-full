@@ -1,0 +1,6 @@
+tensorflow==2.0.0
+opencv-python
+tqdm
+argparse
+h5py
+scipy
