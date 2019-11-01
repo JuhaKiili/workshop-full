@@ -41,9 +41,9 @@ VALIDATION_COUNT = args.validation_count
 def label_image(img):
     img_name = img.split(".")[-3]
     if img_name == "cat":
-        return [1]
+        return 1
     elif img_name == "dog":
-        return [0]
+        return 0
 
 def train_data_loader():
     cachepath = CACHE_DIR + '/training_data.npy'
@@ -56,9 +56,9 @@ def train_data_loader():
             path_to_img = os.path.join(TRAIN_DIR,img)
             # img = cv2.normalize(cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_COLOR),(IMAGE_SIZE,IMAGE_SIZE)), None)
             img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_COLOR),(IMAGE_SIZE,IMAGE_SIZE))
-            #himg = cv2.flip(img, 1)
+            himg = cv2.flip(img, 1)
             training_data.append([np.array(img),np.array(img_label)])
-            #training_data.append([np.array(himg),np.array(img_label)])
+            training_data.append([np.array(himg),np.array(img_label)])
         np.save(cachepath, training_data)
         return training_data
 
@@ -74,33 +74,61 @@ train_data = full_data[:-VALIDATION_COUNT]
 test_data = full_data[-VALIDATION_COUNT:]
 train_images = np.array([i[0] for i in train_data]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,3)
 train_labels = np.array([i[1] for i in train_data])
+#train_labels = tf.keras.utils.to_categorical(np.array([i[1] for i in train_data]))
 test_images = np.array([i[0] for i in test_data]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,3)
 test_labels = np.array([i[1] for i in test_data])
+#test_labels = tf.keras.utils.to_categorical(np.array([i[1] for i in test_data]))
 
 datagen = ImageDataGenerator(
-    featurewise_center=True,
-    featurewise_std_normalization=True,
+    featurewise_center=False,
+    featurewise_std_normalization=False,
     rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    horizontal_flip=True)
+    width_shift_range=0.0,
+    height_shift_range=0.0,
+    horizontal_flip=True,
+    vertical_flip=False)
+datagen.fit(train_images)
+
+validationgen = ImageDataGenerator(
+    featurewise_center=False,
+    featurewise_std_normalization=False,
+    rotation_range=0,
+    width_shift_range=0.0,
+    height_shift_range=0.0,
+    horizontal_flip=False,
+    vertical_flip=False)
+validationgen.fit(test_images)
 
 logdir = "/work/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = callbacks.TensorBoard(log_dir=logdir, profile_batch=0)
 
-model.fit_generator(
-    datagen.flow(train_images, train_labels, batch_size=BATCH_SIZE),
-    epochs=EPOCHS,
-    validation_data=(test_images, test_labels),
-    callbacks=[tensorboard_callback],
-    shuffle=True,
-    )
+# for e in range(5):
+#     print('Epoch', e)
+#     batches = 0
+#     for x_batch, y_batch in datagen.flow(train_images, train_labels, batch_size=BATCH_SIZE):
+#         #cv2.imwrite('/work/debug/color_img_%s_%s.jpg' % (batches, y_batch[0]), x_batch[0])
+#         batches += 1
+#         if batches >= len(train_images) / BATCH_SIZE:
+#             # we need to break the loop by hand because
+#             # the generator loops indefinitely
+#             break
 
-# model.fit(x=train_images,
-#           y=train_labels,
-#           epochs=EPOCHS,
-#           batch_size=BATCH_SIZE,
-#           validation_data=(test_images, test_labels),
-#           callbacks=[tensorboard_callback],
-#           shuffle=True,
-#           )
+# model.fit_generator(
+#     datagen.flow(train_images, train_labels, batch_size=100),
+#     steps_per_epoch=len(train_images) / 100,
+#     epochs=EPOCHS,
+#     validation_data=validationgen.flow(test_images, test_labels, batch_size=100),
+#     validation_steps=len(test_images) / 100,
+#     callbacks=[tensorboard_callback],
+#     shuffle=True,
+#     verbose=True,
+#     )
+
+model.fit(x=train_images,
+          y=train_labels,
+          epochs=EPOCHS,
+          batch_size=BATCH_SIZE,
+          validation_data=(test_images, test_labels),
+          callbacks=[tensorboard_callback],
+          shuffle=True,
+          )

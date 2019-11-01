@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import datasets, layers, models
+from tensorflow.keras import datasets, layers, models, metrics
 
 def get_model(
     learning_rate=0.001,
@@ -22,11 +22,11 @@ def get_model(
 
     model.add(layers.Flatten())
     model.add(layers.Dense(dense_size, activation='relu'))
-    model.add(layers.Dense(2, activation='softmax'))
+    model.add(layers.Dense(1, activation='sigmoid'))
     model.compile(
         optimizer='adam',
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'],
+        loss='binary_crossentropy',
+        metrics=['binary_accuracy'],
         batch_size=batch_size,
         learning_rate=learning_rate,
         drop_out=drop_out,
