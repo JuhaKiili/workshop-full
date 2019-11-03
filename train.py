@@ -48,6 +48,8 @@ SHIFT = args.shift
 FILLMODE = args.fill_mode
 
 class ValohaiEpoch(callbacks.Callback):
+    best_accuracy = 0.0
+
     def on_epoch_end(self, epoch, logs={}):
         print(json.dumps({
             'epoch':epoch,
@@ -56,7 +58,11 @@ class ValohaiEpoch(callbacks.Callback):
             'validated_accuracy': str(logs['val_accuracy']),
             'validated_loss': str(logs['val_loss'])
             }))
-        model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
+        if not os.path.exists(MODEL_DIR):
+            os.makedirs(MODEL_DIR)
+        if epoch > 25 and best_accuracy < logs['val_accuracy']:
+            model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
+            best_accuracy = logs['val_accuracy']
 
 def label_image(img):
     img_name = img.split(".")[-3]
@@ -125,8 +131,3 @@ model.fit_generator(
     shuffle=True,
     verbose=False,
     )
-
-if not os.path.exists(MODEL_DIR):
-    os.makedirs(MODEL_DIR)
-
-model.save(MODEL_DIR + '/model-%s.h5' % datetime.now().strftime("%Y%m%d-%H%M%S"))
