@@ -1,4 +1,5 @@
 import os
+import stat
 import json
 import tensorflow as tf
 import numpy as np
@@ -62,9 +63,12 @@ class ValohaiEpoch(callbacks.Callback):
             os.makedirs(MODEL_DIR)
         print(epoch > 0, ValohaiEpoch.best_accuracy < logs['val_accuracy'])
         if epoch > 0 and ValohaiEpoch.best_accuracy < logs['val_accuracy']:
-            print(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
-            model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
+            filepath = MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy']))
+            print("Saved", filepath)
+            model.save(filepath)
+            os.chmod(filepath, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
             ValohaiEpoch.best_accuracy = logs['val_accuracy']
+            
 
 def label_image(img):
     img_name = img.split(".")[-3]
