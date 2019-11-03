@@ -59,14 +59,13 @@ class ValohaiEpoch(callbacks.Callback):
             'validated_accuracy': str(logs['val_accuracy']),
             'validated_loss': str(logs['val_loss'])
             }))
-        if not os.path.exists(MODEL_DIR):
-            os.makedirs(MODEL_DIR)
-        print(epoch > 0, ValohaiEpoch.best_accuracy < logs['val_accuracy'])
-        if epoch > 0 and ValohaiEpoch.best_accuracy < logs['val_accuracy']:
+        if ValohaiEpoch.best_accuracy < logs['val_accuracy']:
+            if os.path.exists(MODEL_DIR):
+                shutil.rmtree(MODEL_DIR)
+            if not os.path.exists(MODEL_DIR):
+                os.makedirs(MODEL_DIR)
             filepath = MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy']))
-            print("Saved", filepath)
             model.save(filepath)
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
             ValohaiEpoch.best_accuracy = logs['val_accuracy']
             
 
