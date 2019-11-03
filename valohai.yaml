@@ -18,11 +18,6 @@
         description: Initial learning rate
         type: float
         default: 0.001
-      - name: drop_out
-        pass-as: -drop_out={v}
-        description: Keep probability for training dropout
-        type: float
-        default: 0.8
       - name: batch_size
         pass-as: -batch_size={v}
         description: How many images per batch
@@ -48,6 +43,31 @@
         description: Size of fully connected layer
         type: integer
         default: 1024
+      - name: rotation
+        pass-as: -rotation={v}
+        description: Augmented rotation
+        type: float
+        default: 20.0
+      - name: shear
+        pass-as: -shear={v}
+        description: Augmented shear
+        type: float
+        default: 0.1
+      - name: zoom
+        pass-as: -zoom={v}
+        description: Augmented zoom
+        type: float
+        default: 0.2
+      - name: shift
+        pass-as: -shift={v}
+        description: Augmented shift
+        type: float
+        default: 0.1
+      - name: fill_mode
+        pass-as: -fill_mode={v}
+        description: Augmented fill_mode (nearest, wrap, reflect)
+        type: string
+        default: reflect
     inputs:
       - name: training_data
-        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/catsdogs.zip
+        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/catsdogs2.zip
