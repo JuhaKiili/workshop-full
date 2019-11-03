@@ -1,6 +1,6 @@
 sh /work/tensorboard.sh &
 python -W ignore /work/train.py \
-    -epochs=1000 \
+    -epochs=3 \
     -batch_size=100 \
     -image_size=128 \
     -dense_size=512 \

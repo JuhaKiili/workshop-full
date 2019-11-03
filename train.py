@@ -31,7 +31,7 @@ args = parser.parse_args()
 
 TRAIN_DIR = os.getenv('VH_REPOSITORY_DIR', '/work') + '/training_data'
 CACHE_DIR = os.getenv('VH_REPOSITORY_DIR', '/work')
-MODEL_NAME = os.getenv('VH_REPOSITORY_DIR', '/work') + "/models/%s.model" % datetime.now().strftime("%Y%m%d-%H%M%S")
+MODEL_DIR = os.getenv('VH_OUTPUTS_DIR', '/work') + "/models"
 LEARNING_RATE = args.learning_rate
 IMAGE_SIZE = args.image_size
 EPOCHS = args.epochs
@@ -47,7 +47,7 @@ ZOOM = args.zoom
 SHIFT = args.shift
 FILLMODE = args.fill_mode
 
-class ValohaiEpochLog(callbacks.Callback):
+class ValohaiEpoch(callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         print(json.dumps({
             'epoch':epoch,
@@ -56,6 +56,7 @@ class ValohaiEpochLog(callbacks.Callback):
             'validated_accuracy': str(logs['val_accuracy']),
             'validated_loss': str(logs['val_loss'])
             }))
+        model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
 
 def label_image(img):
     img_name = img.split(".")[-3]
@@ -113,14 +114,19 @@ datagen = ImageDataGenerator(
 
 logdir = os.getenv('VH_REPOSITORY_DIR', '/work') + '/logs' + datetime.now().strftime("%Y%m%d-%H%M%S")
 #tensorboard_callback = callbacks.TensorBoard(log_dir=logdir, profile_batch=0)
-valohailog_callback = ValohaiEpochLog()
+valohai_callback = ValohaiEpoch()
 
 model.fit_generator(
     datagen.flow(train_images, train_labels, batch_size=BATCH_SIZE),
     steps_per_epoch=len(train_images) / BATCH_SIZE,
     epochs=EPOCHS,
     validation_data=(test_images, test_labels),
-    callbacks=[valohailog_callback],
+    callbacks=[valohai_callback],
     shuffle=True,
     verbose=False,
     )
+
+if not os.path.exists(MODEL_DIR):
+    os.makedirs(MODEL_DIR)
+
+model.save(MODEL_DIR + '/model-%s.h5' % datetime.now().strftime("%Y%m%d-%H%M%S"))

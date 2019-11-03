@@ -22,12 +22,12 @@
         pass-as: -batch_size={v}
         description: How many images per batch
         type: integer
-        default: 1000
+        default: 100
       - name: validation_count
         pass-as: -validation_count={v}
         description: How many images for validation
         type: integer
-        default: 250
+        default: 2000
       - name: filter_count
         pass-as: -filter_count={v}
         description: Filters per layer
@@ -37,7 +37,7 @@
         pass-as: -image_size={v}
         description: Image size
         type: integer
-        default: 50
+        default: 256
       - name: dense_size
         pass-as: -dense_size={v}
         description: Size of fully connected layer

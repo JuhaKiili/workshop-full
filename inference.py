@@ -1,63 +1,34 @@
 import os
-import sys
 import tensorflow as tf
-import numpy as np
-from random import shuffle
-import cv2
-from tqdm import tqdm
-import tflearn
-from tflearn.layers.conv import conv_2d,max_pool_2d
-from tflearn.layers.core import input_data,dropout,fully_connected
-from tflearn.layers.estimator import regression
-from model import get_model
+from tensorflow.keras import datasets, layers, models, callbacks
 import argparse
+import cv2
+import numpy as np
+
+def prediction_to_text(prediction):
+    if prediction[0] > prediction[1]:
+        return "It's a cat! (%s%%)" % round(prediction[0] * 100, 2)
+    else:
+        return "It's a dog! (%s%%)" % round(prediction[1] * 100, 2)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-image_size', type=int, default=50, help="Image size")
-parser.add_argument('-images_count', type=int, default=100000, help="Image count limit")
-parser.add_argument('-name', type=str, default="dogsvscats", help="Model name")
-parser.add_argument('-filter_count', type=int, default=32, help="Filter count")
-parser.add_argument('-brain_size', type=int, default=1024, help="Brain size")
+parser.add_argument('-data_path', type=str, default="test", help="Where are the images")
+parser.add_argument('-model_path', type=str, default="model.h5", help="Model file path")
+parser.add_argument('-image_size', type=int, default=128, help="Image size")
 args = parser.parse_args()
 
-INFERENCE_DIR = os.getenv('VH_INPUTS_DIR', '/work') + "/inference_data"
-MODEL_NAME = os.getenv('VH_INPUTS_DIR', '/work/models') + "/%s.model" % args.name
-
-FILTER_COUNT = args.filter_count
-BRAIN_SIZE = args.brain_size
+DATA_PATH = args.data_path
+MODEL_PATH = args.model_path
 IMAGE_SIZE = args.image_size
-IMAGES_COUNT = args.images_count
 
-def testing_data_loader():
-    test_data = []
-    for img in tqdm(os.listdir(INFERENCE_DIR)[:IMAGES_COUNT]):
-        img_labels = img.split(".")[0]
-        path_to_img = os.path.join(INFERENCE_DIR,img)
-        img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_GRAYSCALE),(IMAGE_SIZE,IMAGE_SIZE))
-        test_data.append([np.array(img),np.array(img_labels)])
+# Recreate the exact same model
+print(MODEL_PATH)
+new_model = models.load_model(MODEL_PATH)
 
-    shuffle(test_data)
-    np.save("test_data.npy",test_data)
-    return test_data
+for img in os.listdir(path=DATA_PATH):
+    if img.endswith('jpg'):
+        path_to_img = os.path.join(DATA_PATH, img)
+        img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_COLOR),(IMAGE_SIZE,IMAGE_SIZE))
+        new_predictions = new_model.predict(np.array(img).reshape(-1, IMAGE_SIZE, IMAGE_SIZE, 3).astype(float))
+        print(path_to_img, prediction_to_text(new_predictions[0]))
 
-print("Loading images...")
-testing_data_loader()
-
-tf.reset_default_graph()
-
-convnet = input_data(shape=[None, IMAGE_SIZE, IMAGE_SIZE, 1], name='input')
-model = get_model(brain_size=BRAIN_SIZE, filters=FILTER_COUNT)
-
-if os.path.exists("{}.meta".format(MODEL_NAME)):
-    model.load(MODEL_NAME)
-    print("Model Loaded from %s" % ("{}.meta".format(MODEL_NAME)))
-else:
-    sys.exit("Error loading model from %s" % ("{}.meta".format(MODEL_NAME)))
-
-test_data = np.load("test_data.npy", allow_pickle=True)
-for data in test_data:
-    img_class = data[1]
-    img = data[0]
-    imgs = img.reshape((IMAGE_SIZE,IMAGE_SIZE,1))
-    model_out = model.predict([imgs])[0]
-    print("Image %s doggy probability: %.4g%%" % (img_class, model_out[1]*100.0))
