@@ -9,4 +9,8 @@ python -W ignore /work/train.py \
     -filter_count=32 \
     -images_count=1000000 \
     -validation_count=1000 \
-    -name=testo1
+    -rotation=20 \
+    -shear=0.1 \
+    -zoom=0.2 \
+    -shift=0.1 \
+    -fill_mode=reflect
