@@ -1,0 +1,53 @@
+---
+
+- step:
+    name: train
+    image: juhavalohai/workshop:tf-gpu2
+    command:
+    - unzip -q -j /valohai/inputs/training_data/catsdogs.zip -d /valohai/repository/training_data
+    - python train.py {parameters}
+    - zip -j /valohai/outputs/model.zip /valohai/repository/models/*
+    parameters:
+      - name: epochs
+        pass-as: -epochs={v}
+        description: Number of epochs
+        type: integer
+        default: 50
+      - name: learning_rate
+        pass-as: -learning_rate={v}
+        description: Initial learning rate
+        type: float
+        default: 0.001
+      - name: drop_out
+        pass-as: -drop_out={v}
+        description: Keep probability for training dropout
+        type: float
+        default: 0.8
+      - name: batch_size
+        pass-as: -batch_size={v}
+        description: How many images per batch
+        type: integer
+        default: 1000
+      - name: validation_count
+        pass-as: -validation_count={v}
+        description: How many images for validation
+        type: integer
+        default: 250
+      - name: filter_count
+        pass-as: -filter_count={v}
+        description: Filters per layer
+        type: integer
+        default: 32
+      - name: image_size
+        pass-as: -image_size={v}
+        description: Image size
+        type: integer
+        default: 50
+      - name: dense_size
+        pass-as: -dense_size={v}
+        description: Size of fully connected layer
+        type: integer
+        default: 1024
+    inputs:
+      - name: training_data
+        default: https://workshop-juha.s3-eu-west-1.amazonaws.com/catsdogs.zip

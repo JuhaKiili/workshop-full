@@ -8,6 +8,7 @@ training_data
 .DS_Store
 .valohai
 log
+logs
 models
 train
 *.npy

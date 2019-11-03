@@ -1,1 +1,1 @@
-docker build . -t juhavalohai/workshop
+docker build . -t juhavalohai/workshop:tf-gpu2

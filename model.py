@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import datasets, layers, models, metrics
+from tensorflow.keras import datasets, layers, models, metrics, optimizers
 
 def get_model(
     learning_rate=0.001,
@@ -10,25 +10,33 @@ def get_model(
     filter_count=32):
 
     model = models.Sequential()
+
     model.add(layers.Conv2D(filter_count, (3, 3), activation='relu', input_shape=(image_size, image_size, 3)))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.Dropout(0.25))
+
+    model.add(layers.Conv2D(filter_count * 2, (3, 3), activation='relu'))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.Dropout(0.25))
+
+    model.add(layers.Conv2D(filter_count * 4, (3, 3), activation='relu'))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(filter_count, (3, 3), activation='relu'))
+    model.add(layers.Dropout(0.25))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(dense_size, activation='relu'))
-    model.add(layers.Dense(1, activation='sigmoid'))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(2, activation='softmax'))
+
     model.compile(
-        optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['binary_accuracy'],
+        optimizer=optimizers.RMSprop(lr=learning_rate),
+        loss='categorical_crossentropy',
+        metrics=['accuracy'],
         batch_size=batch_size,
-        learning_rate=learning_rate,
-        drop_out=drop_out,
         )
+    model.summary()
     return model
