@@ -31,7 +31,7 @@ args = parser.parse_args()
 
 TRAIN_DIR = os.getenv('VH_REPOSITORY_DIR', '/work') + '/training_data'
 CACHE_DIR = os.getenv('VH_REPOSITORY_DIR', '/work')
-MODEL_DIR = os.getenv('VH_OUTPUTS_DIR', '/work') + "/models"
+MODEL_DIR = os.getenv('VH_OUTPUTS_DIR', '/work') + '/models'
 LEARNING_RATE = args.learning_rate
 IMAGE_SIZE = args.image_size
 EPOCHS = args.epochs
@@ -60,7 +60,9 @@ class ValohaiEpoch(callbacks.Callback):
             }))
         if not os.path.exists(MODEL_DIR):
             os.makedirs(MODEL_DIR)
+        print(epoch > 0, ValohaiEpoch.best_accuracy < logs['val_accuracy'])
         if epoch > 0 and ValohaiEpoch.best_accuracy < logs['val_accuracy']:
+            print(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
             model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
             ValohaiEpoch.best_accuracy = logs['val_accuracy']
 
