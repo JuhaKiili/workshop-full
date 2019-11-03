@@ -1,6 +1,7 @@
 import os
 import stat
 import json
+import shutil
 import tensorflow as tf
 import numpy as np
 from random import shuffle
