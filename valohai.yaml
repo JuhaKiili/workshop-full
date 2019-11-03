@@ -6,7 +6,6 @@
     command:
     - unzip -q -j /valohai/inputs/training_data/catsdogs.zip -d /valohai/repository/training_data
     - python train.py {parameters}
-    - zip -j /valohai/outputs/model.zip /valohai/repository/models/*
     parameters:
       - name: epochs
         pass-as: -epochs={v}

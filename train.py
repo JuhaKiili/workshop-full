@@ -60,9 +60,9 @@ class ValohaiEpoch(callbacks.Callback):
             }))
         if not os.path.exists(MODEL_DIR):
             os.makedirs(MODEL_DIR)
-        if epoch > 25 and best_accuracy < logs['val_accuracy']:
+        if epoch > 0 and ValohaiEpoch.best_accuracy < logs['val_accuracy']:
             model.save(MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy'])))
-            best_accuracy = logs['val_accuracy']
+            ValohaiEpoch.best_accuracy = logs['val_accuracy']
 
 def label_image(img):
     img_name = img.split(".")[-3]
