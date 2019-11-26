@@ -60,24 +60,8 @@ test_labels = np.array([i[1] for i in test_data])
 
 model = models.Sequential()
 model.add(layers.Conv2D(args.filter_count, (3, 3), activation='relu', input_shape=(args.image_size, args.image_size, 3)))
-model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Dropout(0.25))
-
-model.add(layers.Conv2D(args.filter_count * 2, (3, 3), activation='relu'))
-model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Dropout(0.25))
-
-model.add(layers.Conv2D(args.filter_count * 4, (3, 3), activation='relu'))
-model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Dropout(0.25))
-
 model.add(layers.Flatten())
 model.add(layers.Dense(args.dense_size, activation='relu'))
-model.add(layers.BatchNormalization())
-model.add(layers.Dropout(0.5))
 model.add(layers.Dense(2, activation='softmax'))
 
 model.compile(
@@ -108,21 +92,13 @@ class EpochCallback(callbacks.Callback):
 
 epoch_callback = EpochCallback()
 
-datagen = ImageDataGenerator(
-    rotation_range=args.rotation,
-    shear_range=args.shear,
-    zoom_range=args.zoom,
-    horizontal_flip=True,
-    width_shift_range=args.shift,
-    height_shift_range=args.shift,
-    fill_mode="reflect"
-)
-model.fit_generator(
-    datagen.flow(train_images, train_labels, batch_size=args.batch_size),
-    steps_per_epoch=len(train_images) / args.batch_size,
-    epochs=args.epochs,
-    validation_data=(test_images, test_labels),
-    callbacks=[epoch_callback],
+model.fit(
+    x=train_images, 
+    y=train_labels, 
+    batch_size=args.batch_size, 
+    epochs=args.epochs, 
+    verbose=False, 
+    callbacks=[epoch_callback], 
+    validation_data=(test_images, test_labels), 
     shuffle=True,
-    verbose=False,
-    )
+)

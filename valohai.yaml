@@ -36,7 +36,7 @@
         pass-as: -image_size={v}
         description: Image size
         type: integer
-        default: 256
+        default: 32
       - name: images_count
         pass-as: -images_count={v}
         description: How many images
@@ -46,7 +46,7 @@
         pass-as: -dense_size={v}
         description: Size of fully connected layer
         type: integer
-        default: 1024
+        default: 64
       - name: rotation
         pass-as: -rotation={v}
         description: Augmented rotation
