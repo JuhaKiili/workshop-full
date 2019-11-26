@@ -8,16 +8,17 @@ from random import shuffle
 import cv2
 from tqdm import tqdm
 import tensorflow as tf
-from tensorflow.keras import datasets, layers, models, callbacks
+from tensorflow.keras import datasets, layers, models, callbacks, optimizers
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from datetime import datetime
 from model import get_model
 import argparse
 
+tf.random.set_seed(1234)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-learning_rate', type=float, default=0.001, help="Learning rate")
 parser.add_argument('-image_size', type=int, default=50, help="Image size")
-parser.add_argument('-drop_out', type=float, default=0.8, help="Dropout")
 parser.add_argument('-filter_count', type=int, default=32, help="Filter count")
 parser.add_argument('-dense_size', type=int, default=1024, help="Dense size")
 parser.add_argument('-epochs', type=int, default=1, help="Epochs")
@@ -32,24 +33,62 @@ parser.add_argument('-fill_mode', type=str, default="reflect", help="Augmented f
 args = parser.parse_args()
 
 TRAIN_DIR = os.getenv('VH_REPOSITORY_DIR', '/work') + '/training_data'
-CACHE_DIR = os.getenv('VH_REPOSITORY_DIR', '/work')
-MODEL_DIR = os.getenv('VH_OUTPUTS_DIR', '/work') + '/models'
-LEARNING_RATE = args.learning_rate
-IMAGE_SIZE = args.image_size
-EPOCHS = args.epochs
-BATCH_SIZE = args.batch_size
-DROP_OUT = args.drop_out
-FILTER_COUNT = args.filter_count
-DENSE_SIZE = args.dense_size
-IMAGES_COUNT = args.images_count
-VALIDATION_COUNT = args.validation_count
-ROTATION = args.rotation
-SHEAR = args.shear
-ZOOM = args.zoom
-SHIFT = args.shift
-FILLMODE = args.fill_mode
+MODEL_DIR = os.getenv('VH_OUTPUTS_DIR', '/work') + '/models'   
 
-class ValohaiEpoch(callbacks.Callback):
+def label_image(img):
+    img_name = img.split(".")[-3]
+    if img_name == "cat":
+        return [1,0]
+    elif img_name == "dog":
+        return [0,1]
+
+full_data = []
+for img in tqdm(os.listdir(path=TRAIN_DIR,)[:args.images_count]):
+    if img.endswith('jpg'):
+        img_label = label_image(img)
+        path_to_img = os.path.join(TRAIN_DIR,img)
+        img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_COLOR),(args.image_size,args.image_size))
+        full_data.append([img,img_label])
+
+train_data = full_data[:-args.validation_count]
+test_data = full_data[-args.validation_count:]
+
+train_images = np.array([i[0] for i in train_data])
+train_labels = np.array([i[1] for i in train_data])
+test_images = np.array([i[0] for i in test_data])
+test_labels = np.array([i[1] for i in test_data])
+
+model = models.Sequential()
+model.add(layers.Conv2D(args.filter_count, (3, 3), activation='relu', input_shape=(args.image_size, args.image_size, 3)))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(0.25))
+
+model.add(layers.Conv2D(args.filter_count * 2, (3, 3), activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(0.25))
+
+model.add(layers.Conv2D(args.filter_count * 4, (3, 3), activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(0.25))
+
+model.add(layers.Flatten())
+model.add(layers.Dense(args.dense_size, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(2, activation='softmax'))
+
+model.compile(
+    optimizer=optimizers.RMSprop(lr=args.learning_rate),
+    loss='categorical_crossentropy',
+    metrics=['accuracy'],
+    batch_size=args.batch_size,
+    )
+model.summary()
+
+class EpochCallback(callbacks.Callback):
     best_accuracy = 0.0
 
     def on_epoch_end(self, epoch, logs={}):
@@ -60,80 +99,30 @@ class ValohaiEpoch(callbacks.Callback):
             'validated_accuracy': str(logs['val_accuracy']),
             'validated_loss': str(logs['val_loss'])
             }))
-        if ValohaiEpoch.best_accuracy < logs['val_accuracy']:
-            if os.path.exists(MODEL_DIR):
-                shutil.rmtree(MODEL_DIR)
+        if EpochCallback.best_accuracy < logs['val_accuracy']:
             if not os.path.exists(MODEL_DIR):
                 os.makedirs(MODEL_DIR)
             filepath = MODEL_DIR + '/model-%s-acc-%s.h5' % (datetime.now().strftime("%Y%m%d-%H%M%S"), str(logs['val_accuracy']))
             model.save(filepath)
-            ValohaiEpoch.best_accuracy = logs['val_accuracy']
-            
+            EpochCallback.best_accuracy = logs['val_accuracy']  
 
-def label_image(img):
-    img_name = img.split(".")[-3]
-    if img_name == "cat":
-        return [1,0]
-    elif img_name == "dog":
-        return [0,1]
-
-def train_data_loader():
-    cachepath = CACHE_DIR + '/training_data.npy'
-    if os.path.exists(cachepath):
-        return np.load(cachepath, allow_pickle=True)
-    else:
-        training_data = []
-        for img in tqdm(os.listdir(path=TRAIN_DIR,)[:IMAGES_COUNT]):
-            if img.endswith('jpg'):
-                img_label = label_image(img)
-                path_to_img = os.path.join(TRAIN_DIR,img)
-                img = cv2.resize(cv2.imread(path_to_img,cv2.IMREAD_COLOR),(IMAGE_SIZE,IMAGE_SIZE))
-                training_data.append([img,img_label])
-        
-        # np.save(cachepath, training_data)
-        return training_data
-
-tf.random.set_seed(1234)
-full_data = train_data_loader()
-
-model = get_model(
-    learning_rate=LEARNING_RATE,
-    image_size=IMAGE_SIZE,
-    drop_out=DROP_OUT,
-    dense_size=DENSE_SIZE,
-    filter_count=FILTER_COUNT)
-
-train_data = full_data[:-VALIDATION_COUNT]
-test_data = full_data[-VALIDATION_COUNT:]
-
-# for i, im in enumerate(test_data):
-#     cv2.imwrite('/work/debug/test_img_%s_%s.jpg' % (i, im[1]), im[0])
-
-train_images = np.array([i[0] for i in train_data]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,3)
-train_labels = np.array([i[1] for i in train_data])
-test_images = np.array([i[0] for i in test_data]).reshape(-1,IMAGE_SIZE,IMAGE_SIZE,3)
-test_labels = np.array([i[1] for i in test_data])
+epoch_callback = EpochCallback()
 
 datagen = ImageDataGenerator(
-    rotation_range=ROTATION,
-    shear_range=SHEAR,
-    zoom_range=ZOOM,
+    rotation_range=args.rotation,
+    shear_range=args.shear,
+    zoom_range=args.zoom,
     horizontal_flip=True,
-    width_shift_range=SHIFT,
-    height_shift_range=SHIFT,
+    width_shift_range=args.shift,
+    height_shift_range=args.shift,
     fill_mode="reflect"
 )
-
-logdir = os.getenv('VH_REPOSITORY_DIR', '/work') + '/logs' + datetime.now().strftime("%Y%m%d-%H%M%S")
-#tensorboard_callback = callbacks.TensorBoard(log_dir=logdir, profile_batch=0)
-valohai_callback = ValohaiEpoch()
-
 model.fit_generator(
-    datagen.flow(train_images, train_labels, batch_size=BATCH_SIZE),
-    steps_per_epoch=len(train_images) / BATCH_SIZE,
-    epochs=EPOCHS,
+    datagen.flow(train_images, train_labels, batch_size=args.batch_size),
+    steps_per_epoch=len(train_images) / args.batch_size,
+    epochs=args.epochs,
     validation_data=(test_images, test_labels),
-    callbacks=[valohai_callback],
+    callbacks=[epoch_callback],
     shuffle=True,
     verbose=False,
     )

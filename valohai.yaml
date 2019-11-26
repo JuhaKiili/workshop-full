@@ -4,7 +4,7 @@
     name: train
     image: juhavalohai/workshop:tf-gpu2
     command:
-    - unzip -q -j /valohai/inputs/training_data/catsdogs.zip -d /valohai/repository/training_data
+    - unzip -q -j /valohai/inputs/training_data/catsdogs2.zip -d /valohai/repository/training_data
     - python train.py {parameters}
     parameters:
       - name: epochs
@@ -26,7 +26,7 @@
         pass-as: -validation_count={v}
         description: How many images for validation
         type: integer
-        default: 2000
+        default: 1000
       - name: filter_count
         pass-as: -filter_count={v}
         description: Filters per layer
@@ -37,6 +37,11 @@
         description: Image size
         type: integer
         default: 256
+      - name: images_count
+        pass-as: -images_count={v}
+        description: How many images
+        type: integer
+        default: 2000
       - name: dense_size
         pass-as: -dense_size={v}
         description: Size of fully connected layer
